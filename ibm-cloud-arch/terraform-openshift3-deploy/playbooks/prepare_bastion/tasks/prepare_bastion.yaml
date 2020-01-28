@@ -1,0 +1,12 @@
+---
+  # - name: Install RPM packates
+  #   yum:
+  #     name: "{{ packages }}"
+      
+  - name: install needed rpm(s)
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items: "{{ packages }}"
+    register: result
+    until: result is succeeded

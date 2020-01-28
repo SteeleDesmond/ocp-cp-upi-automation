@@ -1,0 +1,20 @@
+---
+  - name: install NetworkManager
+    package:
+      name: NetworkManager
+      state: present
+
+  - name: configure NetworkManager
+    lineinfile:
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
+      regexp: '^NM_CONTROLLED'
+      line: 'NM_CONTROLLED=yes'
+      state: present
+    with_items: "{{ ansible_interfaces }}"
+    when: 'item is match("^e")'
+
+  - name: enable and start NetworkManager
+    service:
+      name: NetworkManager
+      state: restarted
+      enabled: yes

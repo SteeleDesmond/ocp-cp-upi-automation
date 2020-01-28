@@ -1,0 +1,3 @@
+[submodule "ibm-cloud-arch/terraform-module-icp-deploy"]
+	path = ibm-cloud-arch/terraform-module-icp-deploy
+	url = git@github.com:ibm-cloud-architecture/terraform-module-icp-deploy.git

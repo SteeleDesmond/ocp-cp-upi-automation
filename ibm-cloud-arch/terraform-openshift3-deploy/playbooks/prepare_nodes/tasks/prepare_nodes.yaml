@@ -1,0 +1,45 @@
+---
+  - name: YUM update
+    yum:
+      name: '*'
+      state: latest
+
+  # - name: Install RPM packates
+  #   yum:
+  #     name: "{{ packages }}"
+
+  - name: install needed rpm(s)
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items: "{{ packages }}"
+    register: result
+    until: result is succeeded
+
+  - name: check if we need to reboot for kernel update
+    shell: if [ $(rpm -q kernel|tail -n 1) != kernel-$(uname -r) ]; then echo 'reboot'; else echo 'no'; fi
+    ignore_errors: true
+    register: kernel_reboot_hint
+
+  - name: Enable SELinux
+    selinux:
+      policy: targeted
+      state: enforcing
+    register: selinux
+
+  - name: Reboot Server as required
+    become: yes
+    shell: sleep 2 && /sbin/shutdown -r now "System reboot"
+    async: 1
+    poll: 0
+    when: selinux.reboot_required or 
+          kernel_reboot_hint.stdout.find("reboot") != -1
+    register: rebooting
+
+  - name: Wait for reboot
+    wait_for_connection:
+      connect_timeout: 20
+      sleep: 5
+      delay: 5
+      timeout: 300
+    when: rebooting is changed

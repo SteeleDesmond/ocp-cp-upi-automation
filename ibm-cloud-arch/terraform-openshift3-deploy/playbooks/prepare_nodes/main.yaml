@@ -1,0 +1,54 @@
+---
+- hosts: nodes
+  tasks:
+  - name: Enable RHN Repositories
+    include: tasks/enable_rhnrepos.yaml
+    vars:
+      - enabled_repos:
+        - rhel-7-server-rpms
+        - rhel-7-server-extras-rpms
+        - rhel-7-server-ose-{{ openshift_vers }}-rpms
+        - rhel-7-server-ansible-{{ ansible_vers }}-rpms
+        - rhel-7-server-optional-rpms
+        - rhel-7-fast-datapath-rpms
+        - rhel-7-fast-datapath-rpms
+        - rh-gluster-3-client-for-rhel-7-server-rpms
+
+
+- hosts: nodes
+  tasks:
+  - name: Enable NetworkManager
+    include: tasks/enable_networkmanaged.yaml
+
+- hosts: nodes
+  tasks:
+  - name: Prepare Nodes
+    include: tasks/prepare_nodes.yaml
+    vars:
+      - packages:
+        - wget
+        - vim-enhanced
+        - net-tools
+        - bind-utils
+        - tmux
+        - git
+        - iptables-services
+        - bridge-utils
+        - docker
+        - etcd
+        - rpcbind
+      - openshift_vers: "{{ openshift_vers }}"
+      - ansible_vers: "{{ ansible_vers }}"
+
+- hosts: nodes
+  tasks:
+  - name: Configure Docker Storage
+    include: tasks/configure_docker_storage.yaml
+    vars:
+      - storage_config:
+        - { key: 'STORAGE_DRIVER', value: 'overlay2' }
+        - { key: 'DEVS', value: '{{ docker_block_device }}' }
+        - { key: 'CONTAINER_ROOT_LV_NAME', value: 'dockerlv' }
+        - { key: 'CONTAINER_ROOT_LV_SIZE', value: '100%FREE' }
+        - { key: 'CONTAINER_ROOT_LV_MOUNT_PATH', value: '/var/lib/docker' }
+        - { key: 'VG', value: 'dockervg' }

@@ -1,0 +1,40 @@
+---
+  - name: Check if Docker Storage Configured
+    shell: cat /etc/sysconfig/docker-storage-setup|grep {{ docker_block_device }}|wc -l
+    register: check_storage_configured
+  
+  - name: Debug
+    debug:
+      var: check_storage_configured
+
+  - name: Configure Docker Storage
+    lineinfile:
+      dest: "/etc/sysconfig/docker-storage-setup"
+      regexp: '^{{ item.key }}'
+      line: '{{ item.key }}={{ item.value }}'
+      state: present
+    with_items: "{{ storage_config }}"
+    when: check_storage_configured.stdout == "0"
+
+  - name: Configure Docker Storage
+    shell: docker-storage-setup
+    when: check_storage_configured.stdout == "0"
+
+  - name: Stop Docker
+    service:
+      name: docker
+      state: stopped
+      enabled: yes
+    when: check_storage_configured.stdout == "0"
+
+  - name: Empty /var/lib/docker
+    file:
+      path: /var/lib/docker/*
+      state: absent
+    when: check_storage_configured.stdout == "0"
+
+  - name: Start Docker
+    service:
+      name: docker
+      state: started
+      enabled: yes

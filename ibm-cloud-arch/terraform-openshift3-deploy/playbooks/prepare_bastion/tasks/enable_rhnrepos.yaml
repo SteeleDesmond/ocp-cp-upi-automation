@@ -1,0 +1,18 @@
+---
+  - name: Clean up /var/cache/yum
+    file:
+      path: /var/cache/yum/*
+      state: absent
+
+  - name: yum clean all
+    shell: yum clean all > /dev/null 2>&1 || exit 0
+
+  - name: Disable all RHSM repositories
+    rhsm_repository:
+      name: '*'
+      state: disabled
+
+  - name: Enable specific RHSM repositories
+    rhsm_repository:
+      name: "{{ enabled_repos }}"
+      state: enabled

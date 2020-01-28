@@ -1,0 +1,6 @@
+#kubelet_extra_args:
+kibana_install: true
+image-security-enforcement:
+  clusterImagePolicy:
+    - name: "docker.io/ibmcom/*"
+      policy:
